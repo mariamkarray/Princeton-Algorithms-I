@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 public class PointSET {
-    private TreeSet<Point2D> points;
+    private final TreeSet<Point2D> points;
     private List<Point2D> pointsList;
 
     public PointSET() // construct an empty set of points
@@ -53,6 +53,7 @@ public class PointSET {
 
     // all points that are inside the rectangle (or on the boundary)
     public Iterable<Point2D> range(RectHV rect) {
+        checkNullArgument(rect);
         pointsList = new ArrayList<Point2D>(points);
         List<Point2D> pointsInsideRectangle = new ArrayList<Point2D>();
         int size = points.size();
@@ -70,14 +71,14 @@ public class PointSET {
         if (points.isEmpty())
             return null;
 
-        double distance = p.distanceTo(pointsList.get(0));
+        double distance = p.distanceSquaredTo(pointsList.get(0));
         Point2D nearestPoint = pointsList.get(0);
         int size = points.size();
 
         for (int i = 1; i < size; i++) {
-            if (distance > p.distanceTo(pointsList.get(i))) {
+            if (distance > p.distanceSquaredTo(pointsList.get(i))) {
                 nearestPoint = pointsList.get(i);
-                distance = p.distanceTo(pointsList.get(i));
+                distance = p.distanceSquaredTo(pointsList.get(i));
             }
         }
         return nearestPoint;
@@ -88,7 +89,12 @@ public class PointSET {
             throw new IllegalArgumentException("Argument can not be null");
     }
 
-    public static void main(String[] args) {
+    private void checkNullArgument(RectHV r) {
+        if (r == null)
+            throw new IllegalArgumentException("Argument can not be null");
+    }
 
+    // testing
+    public static void main(String[] args) {
     }
 }

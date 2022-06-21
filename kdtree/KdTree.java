@@ -4,18 +4,21 @@
  *  Description:
  **************************************************************************** */
 
+
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 public class KdTree {
     private class Node {
-        private Point2D p;
+        private final Point2D p;
         private Node left;
         private Node right;
-        private RectHV rectangle;  // the rectangle created by this node
+        private final RectHV rectangle;  // the rectangle created by this node
 
         Node(Point2D p, Node left, Node right, RectHV r) {
             this.p = p;
@@ -25,8 +28,8 @@ public class KdTree {
         }
     }
 
-    int size;
-    Node root;
+    private int size;
+    private Node root;
 
     public KdTree()   // construct an empty set of points
     {
@@ -53,7 +56,6 @@ public class KdTree {
 
     private Node insert(Node rt, Node parent, Point2D p, int level, boolean even) {
         if (rt == null) {
-            System.out.println(level);
             RectHV r;
             if (parent == null)
                 r = new RectHV(0, 0, 1, 1);
@@ -151,35 +153,68 @@ public class KdTree {
         }
     }
 
-   /* // all points that are inside the rectangle (or on the boundary)
-    public Iterable<Point2D> range(RectHV rect) {
-
+    private void range(Node rt, RectHV rect, List<Point2D> pointsInsideRectangle) {
+        checkNullArgument(rect);
+        if (rt.rectangle.intersects(rect)) {
+            if (rect.contains(rt.p))
+                pointsInsideRectangle.add(rt.p);
+        }
+        if (rt.right != null)
+            range(rt.right, rect, pointsInsideRectangle);
+        if (rt.left != null)
+            range(rt.left, rect, pointsInsideRectangle);
     }
+
+    // all points that are inside the rectangle (or on the boundary)
+    public Iterable<Point2D> range(RectHV rect) {
+        checkNullArgument(rect);
+        List<Point2D> pointsInsideRectangle = new ArrayList<Point2D>();
+        range(root, rect, pointsInsideRectangle);
+        return pointsInsideRectangle;
+    }
+
 
     public Point2D nearest(Point2D p) {
         checkNullArgument(p);
-    }*/
+        if (isEmpty())
+            return null;
+        return (nearest(p, root, root.p));
+    }
+
+    private Point2D nearest(Point2D p, Node rt, Point2D nearestPoint) {
+        // if the closest point discovered so far is closer than the distance between
+        // the query point and the rectangle corresponding to a node,
+        // there is no need to explore that node (or its subtrees)
+        if (rt == null
+                || (nearestPoint != null && nearestPoint.distanceSquaredTo(p) <= rt.rectangle
+                .distanceSquaredTo(p)))
+            return nearestPoint;
+        if (nearestPoint == null
+                || rt.p.distanceSquaredTo(p) < nearestPoint.distanceSquaredTo(p))
+            nearestPoint = rt.p;
+        if (rt.right != null && rt.right.rectangle.contains(p)) {
+            nearestPoint = nearest(p, rt.right, nearestPoint);
+            nearestPoint = nearest(p, rt.left, nearestPoint);
+        }
+        else {
+            nearestPoint = nearest(p, rt.right, nearestPoint);
+            nearestPoint = nearest(p, rt.left, nearestPoint);
+        }
+        return nearestPoint;
+    }
+
 
     private void checkNullArgument(Point2D p) {
         if (p == null)
             throw new IllegalArgumentException("Argument can not be null");
     }
 
+    private void checkNullArgument(RectHV r) {
+        if (r == null)
+            throw new IllegalArgumentException("Argument can not be null");
+    }
+
+    // testing
     public static void main(String[] args) {
-        KdTree k = new KdTree();
-        Point2D p = new Point2D(0.7, 0.2);
-        Point2D pp = new Point2D(0.5, 0.4);
-        Point2D ppp = new Point2D(0.9, 0.6);
-        Point2D pppp = new Point2D(0.2, 0.3);
-        Point2D ppppp = new Point2D(0.4, 0.7);
-        Point2D pppppp = new Point2D(0.10, 0.2);
-        k.insert(p);
-        k.insert(pp);
-        k.insert(ppp);
-        k.insert(pppp);
-        k.insert(ppppp);
-        k.insert(pppppp);
-        k.insert(p);
-        k.draw();
     }
 }
